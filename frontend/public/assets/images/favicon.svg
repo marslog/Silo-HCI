@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title>Silo Favicon</title>
+  <desc>Yellow stylised A and dark D monogram</desc>
+  <defs>
+    <linearGradient id="faviconGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdd150"/>
+      <stop offset="100%" stop-color="#f3a712"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#ffffff"/>
+  <path fill="url(#faviconGold)" d="M12 52L30 12h3l18 40h-9l-12-26-12 26z"/>
+  <path fill="#111827" fill-rule="evenodd" d="M36 12h8c12.5 0 22 8 22 20s-9.5 20-22 20h-8V12zm8 8h-4v24h4c8.4 0 16-4.7 16-12s-7.6-12-16-12z"/>
+</svg>

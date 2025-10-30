@@ -1,0 +1,61 @@
+services:
+  # Backend API (Flask Python)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: silo-backend
+    restart: always
+    privileged: true
+    environment:
+      - FLASK_APP=app.main:app
+      - FLASK_ENV=production
+      - PROXMOX_HOST=${PROXMOX_HOST}
+      - PROXMOX_PORT=${PROXMOX_PORT}
+      - PROXMOX_USER=${PROXMOX_USER}
+      - PROXMOX_PASSWORD=${PROXMOX_PASSWORD}
+    volumes:
+      - ./backend:/app
+      - ./database:/app/database
+      - ./config:/app/config:ro
+      - /dev:/dev:rslave
+      - /etc/fstab:/etc/fstab
+      - /mnt:/mnt:rslave
+    ports:
+      - "5000:5000"
+    networks:
+      - silo-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (PHP + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: silo-frontend
+    restart: always
+    security_opt:
+      - apparmor=unconfined
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - ./frontend:/var/www/html
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    ports:
+      - "8889:8889"
+    networks:
+      - silo-network
+    depends_on:
+      - backend
+    environment:
+      - API_HOST=backend
+      - API_PORT=5000
+
+networks:
+  silo-network:
+    driver: bridge

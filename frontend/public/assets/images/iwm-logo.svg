@@ -1,0 +1,19 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title>Innovation Wisdom Mastery Logo</title>
+  <desc>Hexagon emblem with flowing blue and gold shapes</desc>
+  <defs>
+    <linearGradient id="iwm-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7DB8E8" />
+      <stop offset="100%" stop-color="#4A8EC4" />
+    </linearGradient>
+    <linearGradient id="iwm-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E9C46A" />
+      <stop offset="100%" stop-color="#D4A12C" />
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <path d="M80 10l58 33.5v73L80 150 22 116.5v-73z" stroke="#D4A12C" stroke-width="12" fill="#FDF7EC" stroke-linejoin="round"/>
+    <path d="M48 104c36 18 56 6 78-18-12-16-28-27-48-24-14 2-22 10-30 20-6 8-10 16 0 22z" fill="url(#iwm-gold)"/>
+    <path d="M112 56c-28-16-58-22-86 8 12 14 32 18 52 12 14-4 24-10 34-20z" fill="url(#iwm-blue)"/>
+  </g>
+</svg>

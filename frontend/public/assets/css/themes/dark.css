@@ -1,0 +1,54 @@
+/* Dark Theme for Silo HCI */
+
+:root {
+    --primary-color: #3b82f6;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #06b6d4;
+    
+    /* Backgrounds */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #334155;
+    --bg-hover: #475569;
+    
+    /* Text */
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    
+    /* Borders */
+    --border-color: #475569;
+    --border-focus: #3b82f6;
+}
+
+body.dark {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Dark mode specific overrides */
+.dark .navbar {
+    background-color: var(--bg-secondary);
+}
+
+.dark .sidebar {
+    background-color: var(--bg-secondary);
+}
+
+.dark .dashboard-card {
+    background-color: var(--bg-secondary);
+}
+
+.dark .content-card {
+    background-color: var(--bg-secondary);
+}
+
+.dark .data-table thead {
+    background-color: var(--bg-card);
+}
+
+.dark .data-table tr:hover {
+    background-color: var(--bg-hover);
+}

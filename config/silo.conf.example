@@ -1,0 +1,38 @@
+# Silo HCI Configuration
+
+[app]
+name = "Silo HCI"
+version = "1.0.0"
+environment = "production"
+
+[api]
+host = "localhost"
+port = 5000
+timeout = 30
+
+[database]
+type = "sqlite"
+path = "database/silo.db"
+
+[cache]
+enabled = true
+ttl = 60
+
+[session]
+lifetime = 7200
+secure = false
+
+[security]
+csrf_enabled = true
+rate_limit = 100
+
+[logging]
+level = "INFO"
+file = "logs/silo.log"
+max_size = "10MB"
+backup_count = 5
+
+[offline]
+enabled = true
+sync_interval = 300
+cache_duration = 3600

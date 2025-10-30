@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70" role="img" aria-labelledby="title desc">
+  <title>Silo Platform Logo</title>
+  <desc>Stylised yellow A and dark D followed by the word Silo</desc>
+  <defs>
+    <linearGradient id="siloGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdd150"/>
+      <stop offset="100%" stop-color="#f3a712"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <path fill="url(#siloGold)" d="M12 65L42 5h4l30 60H64L44 25 24 65z"/>
+    <path fill="#111827" fill-rule="evenodd" d="M78 5h18c25 0 45 16 45 35s-20 35-45 35H78V5zm18 12h-8v36h8c14 0 30-7 30-18s-16-18-30-18z"/>
+    <text x="138" y="48" font-family="'Poppins','Segoe UI',sans-serif" font-size="32" font-weight="600" fill="#111827">SILO</text>
+  </g>
+</svg>

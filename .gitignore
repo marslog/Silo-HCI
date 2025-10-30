@@ -1,0 +1,60 @@
+# Environment
+.env
+*.local
+
+# Dependencies
+/vendor/
+/node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+backend/venv/
+backend/.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Database
+database/*.db
+database/*.db-journal
+
+# Cache
+cache/
+*.cache
+
+# Config (sensitive)
+config/proxmox.json
+config/*.key
+config/*.pem
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup
+*.bak
+*.backup
+*.old
+
+# Temp
+tmp/
+temp/
+*.tmp
+
+# Docker
+docker-compose.override.yml

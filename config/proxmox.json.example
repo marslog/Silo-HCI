@@ -1,0 +1,26 @@
+{
+  "proxmox": {
+    "host": "proxmox.example.com",
+    "port": 8006,
+    "user": "root@pam",
+    "password": "",
+    "token_name": "",
+    "token_value": "",
+    "verify_ssl": false
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": 60
+  },
+  "offline_mode": {
+    "enabled": true,
+    "sync_interval": 300
+  },
+  "nodes": [],
+  "features": {
+    "auto_refresh": true,
+    "refresh_interval": 30,
+    "enable_notifications": true,
+    "dark_mode": true
+  }
+}

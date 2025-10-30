@@ -1,0 +1,16 @@
+{
+    "name": "silo-hci/frontend",
+    "description": "Silo HCI Frontend",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "ext-curl": "*",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Silo\\": "src/"
+        }
+    }
+}
