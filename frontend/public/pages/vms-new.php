@@ -383,18 +383,8 @@ function startVM(node, vmid) {
 }
 
 function stopVM(node, vmid) {
-    Swal.fire({
-        title: 'Stop VM?',
-        text: `Are you sure you want to stop VM ${vmid}?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Stop',
-        confirmButtonColor: '#f59e0b'
-    }).then(result => {
-        if (result.isConfirmed) {
-            executeVMAction(node, vmid, 'stop');
-        }
-    });
+    // No SweetAlert: perform stop immediately and refresh quietly
+    executeVMAction(node, vmid, 'stop');
 }
 
 function deleteVM(node, vmid) {
@@ -420,27 +410,42 @@ function executeVMAction(node, vmid, action) {
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: `VM ${action} completed successfully`,
-                timer: 3000,
-                timerProgressBar: true
-            }).then(() => refreshData());
+            if (action === 'stop') {
+                // Silent success for stop
+                refreshData();
+            } else {
+                // Keep SweetAlert for other actions
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: `VM ${action} completed successfully`,
+                    timer: 3000,
+                    timerProgressBar: true
+                }).then(() => refreshData());
+            }
+        } else {
+            if (action === 'stop') {
+                // Avoid SweetAlert; fallback to simple alert
+                alert(result.error || 'Failed to stop VM');
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.error || 'Action failed'
+                });
+            }
+        }
+    })
+    .catch(error => {
+        if (action === 'stop') {
+            alert(error.message || 'Failed to stop VM');
         } else {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: result.error || 'Action failed'
+                text: error.message
             });
         }
-    })
-    .catch(error => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message
-        });
     });
 }
 

@@ -936,7 +936,7 @@ def mount_disk(node):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @bp.route('/nodes/<node>/create-directory', methods=['POST'])
-def create_directory(node):
+def create_root_directory(node):
     """Create a new directory for storage"""
     try:
         data = request.get_json()
@@ -975,7 +975,7 @@ def create_directory(node):
             return jsonify({'success': False, 'error': f'Failed to create directory: {str(e)}'}), 500
     
     except Exception as e:
-        logger.error(f"Error in create_directory: {e}")
+        logger.error(f"Error in create_root_directory: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @bp.route('/nodes/<node>/browse-directory', methods=['POST'])
@@ -1230,3 +1230,163 @@ def storage_info():
     except Exception as e:
         logger.error(f"Error getting storage info: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@bp.route('/storage/iso-images', methods=['GET'])
+def list_iso_images():
+    """List all ISO images available in storage
+    Returns both path (filesystem) and volid (Proxmox format) for flexibility
+    For VM creation, prefer using volid from 'local' storage
+    """
+    try:
+        proxmox = proxmox_service.get_proxmox()
+        all_isos = []
+        
+        try:
+            storage_list = proxmox.storage.get()
+        except:
+            return jsonify({'success': True, 'data': []})
+        
+        # Get nodes
+        try:
+            nodes = proxmox.nodes.get()
+            node_names = [n.get('node') for n in nodes if n.get('node')]
+        except:
+            node_names = []
+        
+        def find_iso_files(dirpath, storage_id, storage_path, node_name):
+            """Recursively find ISO files in directory"""
+            try:
+                for root, dirs, files in os.walk(dirpath):
+                    # Skip hidden directories
+                    dirs[:] = [d for d in dirs if not d.startswith('.')]
+                    
+                    for filename in files:
+                        if filename.lower().endswith('.iso'):
+                            full_path = os.path.join(root, filename)
+                            rel_path = os.path.relpath(full_path, storage_path)
+                            
+                            try:
+                                size = os.path.getsize(full_path)
+                                created = os.path.getctime(full_path)
+                            except:
+                                size = 0
+                                created = 0
+                            
+                            # Use absolute path for ide2 parameter (not volid format)
+                            # Proxmox will accept absolute paths directly
+                            iso_data = {
+                                'path': full_path,  # Absolute filesystem path
+                                'volid': f"{storage_id}:iso/{rel_path}",  # Proxmox volid (informational)
+                                'name': filename,
+                                'rel_path': rel_path,
+                                'storage_name': storage_id,
+                                'storage_node': node_name,
+                                'size': size,
+                                'created': created
+                            }
+                            
+                            all_isos.append(iso_data)
+            
+            except Exception as e:
+                logger.debug(f"Error scanning {dirpath}: {e}")
+        
+        # First, try to get ISOs from Proxmox storage API (preferred)
+        # This ensures we get ISOs that Proxmox can actually use
+        for node_name in node_names:
+            for storage_info in storage_list:
+                storage_id = storage_info.get('storage', '')
+                storage_type = storage_info.get('type', '')
+                
+                # Skip non-ISO storages
+                if not storage_info.get('content', '') or 'iso' not in storage_info.get('content', ''):
+                    continue
+                
+                if storage_type not in ['dir', 'nfs', 'cifs', 'glusterfs', 'zfs', 'lvmthin']:
+                    continue
+                
+                # Try to get ISOs from Proxmox API for this storage
+                try:
+                    storage_content = proxmox.nodes(node_name).storage(storage_id).content.get()
+                    for item in storage_content:
+                        if 'iso' in item.get('content', ''):
+                            volid = item.get('volid', '')
+                            if volid and '.iso' in volid.lower():
+                                # Extract filename from volid
+                                filename = volid.split('/')[-1]
+                                
+                                iso_data = {
+                                    'path': f"{storage_info.get('path', '')}/{volid.split(':', 1)[1] if ':' in volid else ''}",
+                                    'volid': volid,  # Use Proxmox volid directly
+                                    'name': filename,
+                                    'rel_path': volid.split(':', 1)[1] if ':' in volid else volid,
+                                    'storage_name': storage_id,
+                                    'storage_node': node_name,
+                                    'size': item.get('size', 0),
+                                    'created': item.get('ctime', 0)
+                                }
+                                
+                                # Add if not already in list
+                                if not any(i['volid'] == volid for i in all_isos):
+                                    all_isos.append(iso_data)
+                except Exception as e:
+                    logger.debug(f"Could not get ISOs from {storage_id}: {e}")
+        
+        # Fallback: scan filesystem for ISOs if Proxmox API returns nothing
+        if len(all_isos) == 0:
+            for storage_info in storage_list:
+                storage_id = storage_info.get('storage', '')
+                storage_type = storage_info.get('type', '')
+                storage_path = storage_info.get('path', '')
+                
+                # Only scan filesystem-based storage
+                if storage_type not in ['dir', 'nfs', 'cifs', 'glusterfs', 'zfs']:
+                    continue
+                
+                if not storage_info.get('content', '') or 'iso' not in storage_info.get('content', ''):
+                    continue
+                
+                # Scan directly on first available node (ISO is on the filesystem)
+                if node_names and storage_path and os.path.exists(storage_path):
+                    try:
+                        # Scan the storage path for ISO files
+                        iso_subdir = os.path.join(storage_path, 'iso')
+                        if os.path.isdir(iso_subdir):
+                            find_iso_files(iso_subdir, storage_id, storage_path, node_names[0])
+                        
+                        # Also scan root for ISOs directly
+                        for filename in os.listdir(storage_path):
+                            if filename.lower().endswith('.iso'):
+                                full_path = os.path.join(storage_path, filename)
+                                if os.path.isfile(full_path):
+                                    try:
+                                        size = os.path.getsize(full_path)
+                                        created = os.path.getctime(full_path)
+                                    except:
+                                        size = 0
+                                        created = 0
+                                    
+                                    iso_data = {
+                                        'path': full_path,  # Absolute filesystem path
+                                        'volid': f"{storage_id}:{filename}",  # Proxmox volid
+                                        'name': filename,
+                                        'rel_path': filename,
+                                        'storage_name': storage_id,
+                                        'storage_node': node_names[0],
+                                        'size': size,
+                                        'created': created
+                                    }
+                                    
+                                    # Add if not already in list
+                                    if not any(i['volid'] == iso_data['volid'] for i in all_isos):
+                                        all_isos.append(iso_data)
+                    
+                    except Exception as e:
+                        logger.debug(f"Error scanning storage {storage_id}: {e}")
+        
+        logger.info(f"Found {len(all_isos)} ISO images")
+        return jsonify({'success': True, 'data': all_isos})
+    
+    except Exception as e:
+        logger.error(f"Error listing ISO images: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+

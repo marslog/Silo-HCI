@@ -90,6 +90,10 @@ switch ($uri) {
         require __DIR__ . '/pages/monitoring.php';
         break;
     
+    case '/console':
+        require __DIR__ . '/pages/console.php';
+        break;
+    
     // System routes
     case '/system/generate':
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {

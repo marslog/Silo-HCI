@@ -39,6 +39,7 @@ def create_app(config_class=Config):
     app.register_blueprint(totp.bp)
     app.register_blueprint(system.bp)
     app.register_blueprint(nodes.bp, url_prefix='/api/v1')
+    app.register_blueprint(qemu.bp, url_prefix='/api/v1')
     app.register_blueprint(lxc.bp, url_prefix='/api/v1')
     app.register_blueprint(storage.bp, url_prefix='/api/v1')
     app.register_blueprint(network.bp, url_prefix='/api/v1')

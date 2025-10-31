@@ -65,6 +65,46 @@ def node_status(node):
         logger.error(f"Error getting node status: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@bp.route('/nodes/<node>/kvm', methods=['GET'])
+def node_kvm(node):
+    """Best-effort KVM availability probe for node.
+    Returns { available: true|false, reason?: str }
+    """
+    try:
+        proxmox = proxmox_service.get_proxmox()
+        # Try capabilities endpoint if available
+        available = None
+        reason = None
+        try:
+            caps = proxmox.nodes(node).capabilities.qemu.get()
+            # Some PVE versions include 'version'/'kvm' info; this is heuristic
+            kvm_flags = str(caps)
+            if 'kvm' in kvm_flags.lower():
+                # Heuristic: if string suggests disabled
+                if 'disabled' in kvm_flags.lower() or 'not available' in kvm_flags.lower():
+                    available = False
+                    reason = 'Capabilities report KVM disabled'
+                else:
+                    available = True
+        except Exception:
+            pass
+
+        if available is None:
+            # Fallback: inspect node status cpu flags for 'hypervisor' which often implies no KVM on bare metal
+            status = proxmox.nodes(node).status.get()
+            flags = status.get('cpuinfo', {}).get('flags', '') or ''
+            # If running under a hypervisor and no nested KVM, assume unavailable
+            if 'hypervisor' in flags:
+                available = False
+                reason = 'Host is a VM (hypervisor flag), KVM/Nested may be unavailable'
+            else:
+                available = True
+
+        return jsonify({'success': True, 'data': {'available': bool(available), 'reason': reason}})
+    except Exception as e:
+        logger.error(f"Error probing KVM on node {node}: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @bp.route('/nodes/<node>/vms', methods=['GET'])
 def node_vms(node):
     """Get all VMs on specific node"""

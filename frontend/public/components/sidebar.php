@@ -59,11 +59,11 @@
                     <i class="fas fa-server"></i>
                     <span>Nodes</span>
                 </a>
-                <a href="/vms" class="nav-item <?php echo $active === 'vm' ? 'active' : ''; ?>">
+                <a href="/vms" class="nav-item <?php echo ($active === 'vms' || $active === 'vm') ? 'active' : ''; ?>">
                     <i class="fas fa-desktop"></i>
                     <span>Virtual Machines</span>
                 </a>
-                <a href="/containers" class="nav-item <?php echo $active === 'lxc' ? 'active' : ''; ?>">
+                <a href="/containers" class="nav-item <?php echo ($active === 'containers' || $active === 'lxc') ? 'active' : ''; ?>">
                     <i class="fas fa-box"></i>
                     <span>Containers</span>
                 </a>
