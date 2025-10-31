@@ -119,124 +119,36 @@ $nodes = [
                     <div id="chartClusterMemGauge" class="chart-box" aria-label="Cluster Memory Gauge"></div>
                 </div>
             </div>
-            <div class="widget-wide-card">
-                <div class="widget-header">
-                    <h3>Utilization Trend (last ~10 min)</h3>
-                </div>
-                <div class="widget-body">
-                    <div id="chartTrendCpuMem" class="chart-box" aria-label="CPU and Memory Trend"></div>
-                </div>
-            </div>
-            <div class="widget-wide-card">
-                <div class="widget-header">
-                    <h3>Per-Node CPU</h3>
-                </div>
-                <div class="widget-body">
-                    <div id="chartPerNodeCpu" class="chart-box" aria-label="Per-Node CPU"></div>
-                </div>
-            </div>
         </div>
         
-        <!-- Nodes Table (enhanced) -->
+        <!-- Nodes Overview (icon tiles) -->
         <div class="content-card">
             <div class="card-header">
                 <h2 class="card-title">Cluster Nodes</h2>
             </div>
             <div class="card-body">
-                <table class="data-table" id="nodesTable">
-                    <thead>
-                        <tr>
-                            <th>Node</th>
-                            <th>Status</th>
-                            <th>CPU</th>
-                            <th>Memory</th>
-                            <th>Uptime</th>
-                            <th>Version</th>
-                            <th>KVM</th>
-                            <th>NICs</th>
-                            <th>VMs</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (isset($nodes['data'])): ?>
-                            <?php foreach ($nodes['data'] as $node): ?>
-                                <tr data-node-row="<?php echo htmlspecialchars($node['node']); ?>">
-                                    <td>
-                                        <a href="/nodes/<?php echo $node['node']; ?>" class="text-blue-400 hover:underline">
-                                            <?php echo htmlspecialchars($node['node']); ?>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-<?php echo $node['status'] === 'online' ? 'success' : 'danger'; ?>">
-                                            <?php echo ucfirst($node['status'] ?? 'unknown'); ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <?php 
-                                        $cpuPercent = isset($node['cpu']) ? round($node['cpu'] * 100, 1) : 0;
-                                        echo $cpuPercent . '%';
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php 
-                                        if (isset($node['mem']) && isset($node['maxmem'])) {
-                                            $memPercent = round(($node['mem'] / $node['maxmem']) * 100, 1);
-                                            echo $memPercent . '%';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td><?php echo isset($node['uptime']) ? formatUptime($node['uptime']) : 'N/A'; ?></td>
-                                    <td data-node-version>—</td>
-                                    <td data-node-kvm>—</td>
-                                    <td data-node-nics>—</td>
-                                    <td data-node-vms>—</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary" onclick="viewNode('<?php echo $node['node']; ?>')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="10" class="text-center">No nodes found</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                <div id="nodesGrid" class="info-grid"></div>
             </div>
         </div>
 
-        <!-- Storage Overview -->
+        <!-- Storage Overview (icon tiles) -->
         <div class="content-card">
             <div class="card-header">
                 <h2 class="card-title">Storage Overview</h2>
             </div>
             <div class="card-body">
-                <div id="storageDonuts" class="storage-grid" aria-label="Storage Utilization Donuts"></div>
-                <table class="data-table" id="storageTable">
-                    <thead>
-                        <tr>
-                            <th>Storage</th>
-                            <th>Type</th>
-                            <th>Shared</th>
-                            <th>Used</th>
-                            <th>Total</th>
-                            <th>Usage</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div id="storageGrid" class="storage-grid" aria-label="Storage Tiles"></div>
             </div>
         </div>
 
-        <!-- Recent Tasks -->
+        <!-- Recent Tasks (preview) -->
         <div class="content-card">
-            <div class="card-header">
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
                 <h2 class="card-title">Recent Cluster Tasks</h2>
+                <a href="/tasks" class="btn btn-outline" style="text-decoration:none"><i class="fas fa-list"></i> View all</a>
             </div>
             <div class="card-body">
+                <div class="table-scroll small-table">
                 <table class="data-table" id="tasksTable">
                     <thead>
                         <tr>
@@ -251,6 +163,7 @@ $nodes = [
                     </thead>
                     <tbody></tbody>
                 </table>
+                </div>
             </div>
         </div>
         
@@ -270,19 +183,20 @@ function formatUptime($seconds) {
 ?>
 
 <style>
-/* Widgets layout for Grafana-like look */
+/* Widgets layout – align with Silo light theme (no dark mode) */
 .widgets-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: 260px;
+    grid-auto-rows: 180px; /* compact */
     gap: 16px;
     margin-top: 16px;
+    margin-bottom: 18px; /* add space below gauges */
 }
 .widget-card, .widget-wide-card {
-    background: #0f172a;
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
     border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -290,32 +204,73 @@ function formatUptime($seconds) {
 .widget-wide-card { grid-column: span 2; }
 .widget-header {
     padding: 12px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.85) 100%);
 }
-.widget-header h3 { font-size: 14px; font-weight: 600; color: #e5e7eb; }
+.widget-header h3 { font-size: 11px; font-weight: 600; color: var(--gray-800); }
 .widget-body { flex: 1; padding: 6px 10px; }
-.chart-box { width: 100%; height: 100%; min-height: 200px; }
+.chart-box { width: 100%; height: 100%; min-height: 160px; }
 
 .storage-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
-    margin-bottom: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 8px 0 12px;
 }
-.storage-donut-card {
-    background: #0b1220;
-    border: 1px solid rgba(255,255,255,0.06);
+
+/* Generic compact info tiles (used by Nodes and Storage) */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 8px 0 4px;
+}
+.info-tile, .storage-tile {
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
     border-radius: 10px;
-    padding: 8px;
+    padding: 12px 14px;
+    box-shadow: var(--glass-shadow);
 }
-.storage-donut-title { font-size: 12px; color: #cbd5e1; margin-bottom: 6px; }
-.storage-donut-box { width: 100%; height: 160px; }
+.info-tile:hover, .storage-tile:hover { border-color: #93c5fd; transform: translateY(-1px); transition: border-color 0.15s ease, transform 0.15s ease; cursor: pointer; }
+.tile-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.tile-icon { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff; }
+.tile-icon.ok { background: var(--gradient-blue); }
+.tile-icon.bad { background: var(--gradient-danger); }
+.tile-title { font-weight:700; color: var(--gray-800); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tile-title a { color: inherit; text-decoration: none; }
+.tile-status { font-size: 11px; color: var(--gray-600); }
+.tile-body { display:flex; flex-direction:column; gap:8px; }
+.tile-row { display:grid; grid-template-columns: 16px 64px 1fr auto; align-items:center; gap:8px; font-size:12px; color: var(--gray-700); }
+.tile-row i { text-align:center; color:#64748b; }
+.mini-bar { height:6px; background: rgba(148,163,184,0.2); border-radius:999px; overflow:hidden; }
+.mini-bar > div { height:100%; background: var(--gradient-blue); }
+.tile-meta { font-size:12px; color:#475569; }
+
+/* Section spacing for clearer separation between blocks */
+.widgets-grid + .content-card { margin-top: 18px; }
+.content-card { margin-bottom: 16px; }
+.content-card .card-header { margin-bottom: 4px; }
 
 @media (max-width: 1024px) {
   .widgets-grid { grid-template-columns: 1fr; }
   .widget-wide-card { grid-column: span 1; }
 }
+
+/* Scale down overall dashboard UI further for compact look */
+.page-title { font-size: 1.35rem; }
+.dashboard-card { padding: calc(var(--spacing-md)*0.7) calc(var(--spacing-lg)*0.7); }
+.dashboard-card .card-icon { width: 30px; height: 30px; font-size: 0.95rem; }
+.card-value { font-size: 1.05rem; }
+.card-header { padding: calc(var(--spacing-lg)*0.7) calc(var(--spacing-xl)*0.7); }
+.card-body { padding: calc(var(--spacing-lg)*0.7) calc(var(--spacing-xl)*0.7); }
+.data-table th, .data-table td { padding: calc(var(--spacing-md)*0.65); }
+.data-table th { font-size: 0.78rem; }
+
+/* Small scrollable table for Recent Tasks */
+.table-scroll { max-height: 260px; overflow-y: auto; }
+.small-table thead th, .small-table td { font-size: 12px; }
+.small-table thead th { position: sticky; top: 0; z-index: 1; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
 </style>
 
 <script>
@@ -329,63 +284,58 @@ function viewNode(node) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Enrich node rows with version/KVM/NICs/VMs
-        const rows = Array.from(document.querySelectorAll('tr[data-node-row]'));
-        for (const row of rows) {
-            const node = row.getAttribute('data-node-row');
-            try {
-                const [stRes, kvmRes, netRes, vmsRes] = await Promise.all([
-                    fetch(`/api/v1/nodes/${node}/status`).then(r=>r.json()).catch(()=>({})),
-                    fetch(`/api/v1/nodes/${node}/kvm`).then(r=>r.json()).catch(()=>({})),
-                    fetch(`/api/v1/nodes/${node}/network`).then(r=>r.json()).catch(()=>({})),
-                    fetch(`/api/v1/nodes/${node}/vms`).then(r=>r.json()).catch(()=>({}))
-                ]);
-                const version = stRes?.data?.pveversion || stRes?.data?.pveversioninfo?.release || '—';
-                const kvm = (kvmRes?.data?.available === false) ? 'Unavailable' : 'Available';
-                const kvmTitle = kvmRes?.data?.reason || '';
-                const nics = Array.isArray(netRes?.data) ? netRes.data.filter(n=>String(n?.active||'').toString()==='1' || n?.autostart==='1').length : '—';
-                const vms = Array.isArray(vmsRes?.data) ? vmsRes.data.length : '—';
-                const vCell = row.querySelector('[data-node-version]'); if (vCell) vCell.textContent = version;
-                const kCell = row.querySelector('[data-node-kvm]'); if (kCell) { kCell.textContent = kvm; if (kvmTitle) kCell.title = kvmTitle; }
-                const nCell = row.querySelector('[data-node-nics]'); if (nCell) nCell.textContent = nics;
-                const vmCell = row.querySelector('[data-node-vms]'); if (vmCell) vmCell.textContent = vms;
-            } catch (e) { /* ignore per-node errors */ }
-        }
-
-        // Storage overview via cluster resources
+        // Build nodes icon grid with compact info
         try {
-            const res = await fetch('/api/v1/cluster/resources');
-            const data = await res.json();
-            if (data.success && Array.isArray(data.data)) {
-                const storages = data.data.filter(r => r.type === 'storage');
-                const tbody = document.querySelector('#storageTable tbody');
-                if (tbody) {
-                    tbody.innerHTML = '';
-                    storages.forEach(s => {
-                        const total = s.maxdisk || 0; const used = s.disk || 0;
-                        const pct = total ? Math.round((used/total)*100) : 0;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${s.storage || s.id || '—'}</td>
-                            <td>${s.storagetype || '—'}</td>
-                            <td>${s.shared ? 'Yes' : 'No'}</td>
-                            <td>${formatBytes(used)}</td>
-                            <td>${formatBytes(total)}</td>
-                            <td>
-                                <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-                            </td>`;
-                        tbody.appendChild(tr);
-                    });
+            const r = await fetch('/api/v1/nodes');
+            const j = await r.json();
+            const list = Array.isArray(j?.data) ? j.data : [];
+            const grid = document.getElementById('nodesGrid');
+            if (grid) {
+                grid.innerHTML = '';
+                for (const n of list) {
+                    const node = n.node;
+                    try {
+                        const [stRes, kvmRes, vmsRes] = await Promise.all([
+                            fetch(`/api/v1/nodes/${node}/status`).then(r=>r.json()).catch(()=>({})),
+                            fetch(`/api/v1/nodes/${node}/kvm`).then(r=>r.json()).catch(()=>({})),
+                            fetch(`/api/v1/nodes/${node}/vms`).then(r=>r.json()).catch(()=>({}))
+                        ]);
+                        const status = (n.status||'unknown').toLowerCase();
+                        const cpuPct = typeof n.cpu==='number' ? Math.round(n.cpu*1000)/10 : 0;
+                        const memPct = (n.mem && n.maxmem) ? Math.round((n.mem/n.maxmem)*1000)/10 : 0;
+                        const version = stRes?.data?.pveversion || stRes?.data?.pveversioninfo?.release || '—';
+                        const kvmAvail = (kvmRes?.data?.available === false) ? false : true;
+                        const vmCount = Array.isArray(vmsRes?.data) ? vmsRes.data.length : '—';
+                        const card = document.createElement('div');
+                        card.className = 'info-tile';
+                        card.innerHTML = `
+                            <div class="tile-head">
+                                <div class="tile-icon ${status==='online'?'ok':'bad'}"><i class="fas fa-network-wired"></i></div>
+                                <div class="tile-title"><a href="/nodes/${node}">${node}</a></div>
+                                <span class="tile-status ${status}">${status}</span>
+                            </div>
+                            <div class="tile-body">
+                                <div class="tile-row"><i class="fas fa-microchip"></i><span>CPU</span><div class="mini-bar"><div style="width:${cpuPct}%"></div></div><b>${cpuPct}%</b></div>
+                                <div class="tile-row"><i class="fas fa-memory"></i><span>Memory</span><div class="mini-bar"><div style="width:${memPct}%"></div></div><b>${memPct}%</b></div>
+                                <div class="tile-meta"><i class="fas fa-code-branch"></i> ${version} • <i class="fas fa-desktop"></i> ${vmCount} • <i class="fas fa-bolt"></i> ${kvmAvail?'KVM':'No KVM'}</div>
+                            </div>`;
+                        grid.appendChild(card);
+                    } catch(e){}
                 }
             }
         } catch (e) {}
+
+        // Storage overview tiles
+        await refreshStorageTiles();
 
         // Recent tasks
         try {
             const res = await fetch('/api/v1/cluster/tasks');
             const data = await res.json();
             if (data.success && Array.isArray(data.data)) {
-                const tasks = data.data.slice(0, 10);
+                const tasks = data.data
+                    .sort((a,b)=> (b.starttime||0) - (a.starttime||0))
+                    .slice(0, 10);
                 const tbody = document.querySelector('#tasksTable tbody');
                 if (tbody) {
                     tbody.innerHTML = '';
@@ -409,33 +359,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         await ensureEChartsLoaded();
         if (window.echarts) {
             initDashboardCharts();
-            // Initial data push from PHP summary
+            // Initial gauges from PHP summary
             try {
                 const cpu0 = Number(<?php echo json_encode($summary['data']['cpu']['percentage'] ?? 0); ?>);
                 const mem0 = Number(<?php echo json_encode($summary['data']['memory']['percentage'] ?? 0); ?>);
-                pushTrendPoint(cpu0, mem0);
                 updateGauges(cpu0, mem0);
             } catch (e) {}
 
-            // Poll summary every 5s for trends and gauges
+            // Poll summary every 5s for gauges
             setInterval(async () => {
                 try {
                     const r = await fetch('/api/v1/monitoring/summary');
                     const j = await r.json();
                     const cpu = Number(j?.data?.cpu?.percentage || 0);
                     const mem = Number(j?.data?.memory?.percentage || 0);
-                    pushTrendPoint(cpu, mem);
                     updateGauges(cpu, mem);
                 } catch (e) { /* ignore */ }
             }, 5000);
 
-            // Poll nodes for per-node CPU every 10s
-            await refreshPerNodeCpu();
-            setInterval(refreshPerNodeCpu, 10000);
-
-            // Poll storage for donuts every 30s
-            await refreshStorageDonuts();
-            setInterval(refreshStorageDonuts, 30000);
+            // Poll storage tiles every 30s
+            await refreshStorageTiles();
+            setInterval(refreshStorageTiles, 30000);
         }
     } catch (err) {
         console.warn('Dashboard enrichment failed', err);
@@ -455,14 +399,15 @@ function formatTime(ts){
 }
 
 // ---------- Charts logic ----------
-let trendState = { t: [], cpu: [], mem: [] };
-let charts = { cpuGauge: null, memGauge: null, trend: null, nodeCpu: null };
+let charts = { cpuGauge: null, memGauge: null };
 
 function ensureEChartsLoaded() {
     return new Promise((resolve) => {
         if (window.echarts) return resolve(true);
         const s = document.createElement('script');
-        s.src = '/cdn/npm/echarts@5.5.0/dist/echarts.min.js';
+        // Load ECharts via same-origin CDN proxy. Note: unpkg paths do not include the 'npm/' segment.
+        // Using '/cdn/echarts@5.5.0/...' ensures Nginx proxies to 'https://unpkg.com/echarts@5.5.0/...'
+        s.src = '/cdn/echarts@5.5.0/dist/echarts.min.js';
         s.async = true;
         s.onload = () => resolve(true);
         s.onerror = () => resolve(false);
@@ -475,17 +420,11 @@ function ensureEChartsLoaded() {
 function initDashboardCharts() {
     const cpuEl = document.getElementById('chartClusterCpuGauge');
     const memEl = document.getElementById('chartClusterMemGauge');
-    const trendEl = document.getElementById('chartTrendCpuMem');
-    const nodeCpuEl = document.getElementById('chartPerNodeCpu');
     if (cpuEl) charts.cpuGauge = echarts.init(cpuEl, null, { renderer: 'canvas' });
     if (memEl) charts.memGauge = echarts.init(memEl, null, { renderer: 'canvas' });
-    if (trendEl) charts.trend = echarts.init(trendEl, null, { renderer: 'canvas' });
-    if (nodeCpuEl) charts.nodeCpu = echarts.init(nodeCpuEl, null, { renderer: 'canvas' });
 
     setGaugeOptions(charts.cpuGauge, 'CPU');
     setGaugeOptions(charts.memGauge, 'Memory');
-    setTrendOptions();
-    setNodeCpuOptions([]);
 
     window.addEventListener('resize', () => {
         Object.values(charts).forEach(c => c && c.resize());
@@ -527,77 +466,13 @@ function updateGauges(cpuPct, memPct) {
     if (charts.memGauge) charts.memGauge.setOption({ series: [{ data: [{ value: Number(memPct.toFixed ? memPct.toFixed(1) : memPct), name: 'Memory' }] }] });
 }
 
-function setTrendOptions() {
-    if (!charts.trend) return;
-    const option = {
-        backgroundColor: 'transparent',
-        grid: { left: 40, right: 20, top: 20, bottom: 28 },
-        tooltip: { trigger: 'axis' },
-        legend: { data: ['CPU %','Memory %'], textStyle: { color: '#cbd5e1' } },
-        xAxis: { type: 'category', data: trendState.t, axisLabel: { color: '#94a3b8' }, axisLine: { lineStyle: { color: '#334155' } } },
-        yAxis: { type: 'value', min: 0, max: 100, axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: '#1f2937' } } },
-        series: [
-            { name: 'CPU %', type: 'line', smooth: true, showSymbol: false, data: trendState.cpu, areaStyle: { opacity: 0.15 }, lineStyle: { width: 2 }, color: '#60a5fa' },
-            { name: 'Memory %', type: 'line', smooth: true, showSymbol: false, data: trendState.mem, areaStyle: { opacity: 0.08 }, lineStyle: { width: 2 }, color: '#34d399' }
-        ]
-    };
-    charts.trend.setOption(option);
-}
+// removed trend/per-node chart helpers
 
-function pushTrendPoint(cpuPct, memPct) {
-    const ts = new Date();
-    const label = ts.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const maxPoints = 120; // ~10 minutes at 5s
-    trendState.t.push(label);
-    trendState.cpu.push(Number(cpuPct));
-    trendState.mem.push(Number(memPct));
-    if (trendState.t.length > maxPoints) {
-        trendState.t.shift(); trendState.cpu.shift(); trendState.mem.shift();
-    }
-    setTrendOptions();
-}
-
-async function refreshPerNodeCpu() {
-    if (!charts.nodeCpu) return;
-    try {
-        const r = await fetch('/api/v1/nodes');
-        const j = await r.json();
-        const list = Array.isArray(j?.data) ? j.data : [];
-        const nodes = list.map(n => ({ name: n.node, cpu: Math.round((n.cpu||0)*1000)/10 }));
-        // sort by cpu desc, top 12
-        nodes.sort((a,b)=>b.cpu-a.cpu);
-        setNodeCpuOptions(nodes.slice(0,12));
-    } catch (e) { /* ignore */ }
-}
-
-function setNodeCpuOptions(items) {
-    if (!charts.nodeCpu) return;
-    const names = items.map(i=>i.name);
-    const vals = items.map(i=>i.cpu);
-    const option = {
-        backgroundColor: 'transparent',
-        grid: { left: 80, right: 20, top: 10, bottom: 20 },
-        xAxis: { type: 'value', max: 100, axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: '#1f2937' } } },
-        yAxis: { type: 'category', data: names, axisLabel: { color: '#cbd5e1' }, axisLine: { lineStyle: { color: '#334155' } } },
-        series: [{
-            type: 'bar', data: vals, barWidth: 14,
-            label: { show: true, position: 'right', formatter: '{c}%', color: '#e5e7eb' },
-            itemStyle: { color: (params)=> {
-                const v = params.value;
-                if (v<50) return '#10b981'; if (v<80) return '#f59e0b'; return '#ef4444';
-            }}
-        }]
-    };
-    charts.nodeCpu.setOption(option);
-}
-
-async function refreshStorageDonuts() {
-    if (!window.echarts) return;
+async function refreshStorageTiles() {
     try {
         const res = await fetch('/api/v1/cluster/resources');
         const data = await res.json();
         const storages = (data?.data || []).filter(r => r.type === 'storage');
-        // pick top 6 by total size
         const sorted = storages
             .map(s=>({
                 id: s.storage || s.id || 'unknown',
@@ -607,42 +482,29 @@ async function refreshStorageDonuts() {
                 shared: !!s.shared
             }))
             .sort((a,b)=>b.total-a.total)
-            .slice(0,6);
+            .slice(0,8);
 
-        const grid = document.getElementById('storageDonuts');
+        const grid = document.getElementById('storageGrid');
         if (!grid) return;
         grid.innerHTML = '';
-        const donutCharts = [];
         sorted.forEach(s => {
+            const used = s.used; const total = s.total; const pct = total ? Math.round((used/total)*100) : 0;
             const card = document.createElement('div');
-            card.className = 'storage-donut-card';
-            const title = document.createElement('div');
-            title.className = 'storage-donut-title';
-            title.textContent = `${s.id} • ${s.shared ? 'Shared' : 'Local'} • ${s.type}`;
-            const box = document.createElement('div');
-            const cid = `storage-donut-${cssSafeId(s.id)}`;
-            box.id = cid; box.className = 'storage-donut-box';
-            card.appendChild(title); card.appendChild(box);
+            card.className = 'storage-tile';
+            card.innerHTML = `
+                <div class="tile-head">
+                    <div class="tile-icon ok"><i class="fas fa-hdd"></i></div>
+                    <div class="tile-title" title="${s.id}">${s.id}</div>
+                    <span class="tile-status">${s.shared ? 'Shared' : 'Local'}</span>
+                </div>
+                <div class="tile-body">
+                    <div class="tile-row"><i class="fas fa-database"></i><span>Type</span><b>${s.type}</b></div>
+                    <div class="tile-row"><i class="fas fa-chart-pie"></i><span>Usage</span>
+                        <div class="mini-bar"><div style="width:${pct}%"></div></div><b>${pct}%</b>
+                    </div>
+                    <div class="tile-meta">${formatBytes(used)} / ${formatBytes(total)}</div>
+                </div>`;
             grid.appendChild(card);
-            const chart = echarts.init(box, null, { renderer: 'canvas' });
-            donutCharts.push({ chart, s });
-        });
-
-        donutCharts.forEach(({chart, s}) => {
-            const used = s.used; const total = s.total; const free = Math.max(total-used,0);
-            const usedPct = total ? Math.round((used/total)*100) : 0;
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-                title: { left: 'center', top: '38%', text: usedPct + '%', textStyle: { color: '#e5e7eb', fontSize: 18, fontWeight: 'bold' } },
-                series: [{
-                    type: 'pie', radius: ['60%','85%'], avoidLabelOverlap: true, label: { show: false },
-                    data: [
-                        { value: used, name: 'Used', itemStyle: { color: '#60a5fa' } },
-                        { value: free, name: 'Free', itemStyle: { color: '#1f2937' } }
-                    ]
-                }]
-            });
         });
     } catch (e) { /* ignore */ }
 }
